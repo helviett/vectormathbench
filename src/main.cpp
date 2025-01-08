@@ -61,6 +61,8 @@ namespace std
 #include <rtm/qvvf.h>
 #include <rtm/vector4d.h>
 #include <rtm/vector4f.h>
+#define HLSLPP_FEATURE_TRANSFORM
+#include "../build/_deps/hlslpp-src/include/hlsl++.h"
 
 // Sony vectormath
 #include <vectormath.hpp>
@@ -351,6 +353,11 @@ namespace mathbench
         DirectX::XMMATRIX dxMatA;
         DirectX::XMMATRIX dxMatB;
         DirectX::XMMATRIX dxMatC;
+
+        hlslpp::float4x4 hlslMatA;
+        hlslpp::float4x4 hlslMatB;
+        hlslpp::float4x4 hlslMatC;
+        hlslpp::float4 hlslVecA;
     } results;
 
     namespace vectors
@@ -550,6 +557,24 @@ namespace mathbench
 
         void complex1(ankerl::nanobench::Bench& bench)
         {
+            bench.run("Complex operation 1 with hlslpp",
+                [&]
+                {
+                    hlslpp::float2 vec2a(1.0f, 2.0f);
+                    hlslpp::float2 vec2b(3.0f, 4.0f);
+                    hlslpp::float3 vec3a(1.0f, 2.0f, 3.0f);
+                    hlslpp::float3 vec3b(3.0f, 4.0f, 5.0f);
+                    hlslpp::float4 vec4a(1.0f, 2.0f, 3.0f, 4.0f);
+                    hlslpp::float4 vec4b(3.0f, 4.0f, 5.0f, 6.0f);
+
+                    auto x = hlslpp::dot(vec2a, vec2b);
+                    auto y = dot(cross(vec3a, vec3b), vec3b);
+                    auto z = dot(vec4a, vec4b);
+                    auto w = dot(vec4a + vec4b, vec4b);
+
+                    results.hlslVecA = hlslpp::float4(x, y, z, w);
+                    ankerl::nanobench::doNotOptimizeAway(results.hlslVecA);
+                });
             bench.run("Complex operation 1 with SimpleMath::Vector*",
                 [&]
                 {
@@ -1069,6 +1094,15 @@ namespace mathbench
                         ScalingOrientationQuaternion, Scaling, RotationOrigin,
                         RotationQuaternion, Translation);
                     ankerl::nanobench::doNotOptimizeAway(results.dxMatA);
+                });
+
+            bench.run("Construct model matrix hlslpp",
+                [&]
+                {
+                    using namespace hlslpp;
+                    results.hlslMatA =
+                        mul(mul(mul(mul(float4x4::translation(1.0f, 2.0f, 3.0f), float4x4::rotation_x(0.5f)), float4x4::rotation_y(0.5f)), float4x4::rotation_z(0.5f)), float4x4::scale(1.0f, 2.0f, 3.0f));
+                    ankerl::nanobench::doNotOptimizeAway(results.hlslMatA);
                 });
 
             bench.run("Construct model matrix Vectormath",
@@ -1617,6 +1651,14 @@ namespace mathbench
                     results.rtmMat4x4da =
                         matrix_mul(results.rtmMat4x4db, results.rtmMat4x4dc);
                     ankerl::nanobench::doNotOptimizeAway(results.rtmMat4x4da);
+                });
+            bench.run("Matrix matrix multiply hlslpp",
+                [&]
+                {
+                    using namespace hlslpp;
+                    results.hlslMatA =
+                        mul(results.hlslMatC, results.hlslMatB);
+                    ankerl::nanobench::doNotOptimizeAway(results.hlslMatA);
                 });
         }
     }  // namespace matrices

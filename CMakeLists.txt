@@ -32,16 +32,17 @@ include(cmake/cpm.cmake)
 CPMAddPackage("gh:g-truc/glm#0.9.9.8@0.9.9.8")
 CPMAddPackage("gh:microsoft/DirectXMath#dec2022")
 CPMAddPackage("gh:move-engine/move-vectormath#33673bec3f7910cd6d23fb20f516f9cd6cad8421")
+CPMAddPackage("gh:helviett/hlslpp#master")
 
-# CPMAddPackage(
-#   NAME rtm
-#   GITHUB_REPOSITORY nfrechette/rtm
-#   GIT_TAG v2.1.5
-#   DOWNLOAD_ONLY YES
-# )
+CPMAddPackage(
+  NAME rtm
+  GITHUB_REPOSITORY nfrechette/rtm
+  GIT_TAG v2.1.5
+  DOWNLOAD_ONLY YES
+)
 
-# add_library(rtm INTERFACE)
-# target_include_directories(rtm INTERFACE ${rtm_SOURCE_DIR}/includes)
+add_library(rtmm INTERFACE)
+target_include_directories(rtmm INTERFACE ${rtm_SOURCE_DIR}/includes)
 
 CPMAddPackage(
   NAME sony_vectormath
@@ -54,7 +55,8 @@ add_library(sony_vectormath INTERFACE)
 target_include_directories(sony_vectormath INTERFACE ${sony_vectormath_SOURCE_DIR})
 
 add_library(vmb_common INTERFACE)
-target_link_libraries(vmb_common INTERFACE glm DirectXMath sony_vectormath move::vectormath rtm rtm)
+target_link_libraries(vmb_common INTERFACE glm DirectXMath sony_vectormath move::vectormath rtmm)
+target_include_directories(vmb_common INTERFACE hlslpp_INCLUDE_DIRS)
 target_sources(vmb_common INTERFACE src/main.cpp)
 
 if (UNIX)
